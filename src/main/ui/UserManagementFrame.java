@@ -1,0 +1,220 @@
+package ui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+import model.User;
+import dao.UserDAO;
+import service.AuthService;
+
+public class UserManagementFrame extends JFrame {
+
+    private User currentUser;
+    private UserDAO userDAO = new UserDAO();
+    private AuthService authService = new AuthService();
+    private JTable userTable;
+    private UserTableModel tableModel;
+
+    public UserManagementFrame(User user) {
+        this.currentUser = user;
+
+        if (!authService.isAdmin(currentUser)) {
+            JOptionPane.showMessageDialog(this, "Access denied", "Error", JOptionPane.ERROR_MESSAGE);
+            dispose();
+            return;
+        }
+
+        setTitle("User Management");
+        setSize(800, 600);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // Table
+        tableModel = new UserTableModel();
+        userTable = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(userTable);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel();
+        JButton addBtn = new JButton("Add User");
+        JButton editBtn = new JButton("Edit User");
+        JButton deleteBtn = new JButton("Delete User");
+        JButton refreshBtn = new JButton("Refresh");
+
+        buttonPanel.add(addBtn);
+        buttonPanel.add(editBtn);
+        buttonPanel.add(deleteBtn);
+        buttonPanel.add(refreshBtn);
+
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+
+        loadUsers();
+
+        addBtn.addActionListener(e -> showAddUserDialog());
+        editBtn.addActionListener(e -> showEditUserDialog());
+        deleteBtn.addActionListener(e -> deleteUser());
+        refreshBtn.addActionListener(e -> loadUsers());
+
+        setVisible(true);
+    }
+
+    private void loadUsers() {
+        List<User> users = userDAO.getAllUsers();
+        tableModel.setUsers(users);
+    }
+
+    private void showAddUserDialog() {
+        // Simple dialog for adding user
+        JTextField usernameField = new JTextField();
+        JPasswordField passwordField = new JPasswordField();
+        JTextField nameField = new JTextField();
+        JTextField emailField = new JTextField();
+        JTextField matriculeField = new JTextField();
+        JTextField levelField = new JTextField();
+        JComboBox<String> roleBox = new JComboBox<>(new String[]{"USER", "TEACHER", "ADMIN"});
+
+        Object[] message = {
+            "Username:", usernameField,
+            "Password:", passwordField,
+            "Name:", nameField,
+            "Email:", emailField,
+            "Matricule:", matriculeField,
+            "Level:", levelField,
+            "Role:", roleBox
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Add User", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            User user = new User();
+            user.setUsername(usernameField.getText().trim());
+            user.setPassword(authService.hashPassword(new String(passwordField.getPassword())));
+            user.setName(nameField.getText().trim());
+            user.setEmail(emailField.getText().trim());
+            user.setMatricule(matriculeField.getText().trim());
+            user.setLevel(levelField.getText().trim());
+            user.setRole((String) roleBox.getSelectedItem());
+
+            if (userDAO.addUser(user)) {
+                loadUsers();
+                JOptionPane.showMessageDialog(this, "User added successfully");
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add user");
+            }
+        }
+    }
+
+    private void showEditUserDialog() {
+        int selectedRow = userTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Select a user to edit");
+            return;
+        }
+
+        User user = tableModel.getUserAt(selectedRow);
+
+        JTextField usernameField = new JTextField(user.getUsername());
+        JPasswordField passwordField = new JPasswordField(); // Leave empty to keep current
+        JTextField nameField = new JTextField(user.getName());
+        JTextField emailField = new JTextField(user.getEmail());
+        JTextField matriculeField = new JTextField(user.getMatricule());
+        JTextField levelField = new JTextField(user.getLevel());
+        JComboBox<String> roleBox = new JComboBox<>(new String[]{"USER", "TEACHER", "ADMIN"});
+        roleBox.setSelectedItem(user.getRole());
+
+        Object[] message = {
+            "Username:", usernameField,
+            "Password (leave empty to keep current):", passwordField,
+            "Name:", nameField,
+            "Email:", emailField,
+            "Matricule:", matriculeField,
+            "Level:", levelField,
+            "Role:", roleBox
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Edit User", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            user.setUsername(usernameField.getText().trim());
+            String password = new String(passwordField.getPassword());
+            if (!password.isEmpty()) {
+                user.setPassword(authService.hashPassword(password));
+            }
+            user.setName(nameField.getText().trim());
+            user.setEmail(emailField.getText().trim());
+            user.setMatricule(matriculeField.getText().trim());
+            user.setLevel(levelField.getText().trim());
+            user.setRole((String) roleBox.getSelectedItem());
+
+            if (userDAO.updateUser(user)) {
+                loadUsers();
+                JOptionPane.showMessageDialog(this, "User updated successfully");
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update user");
+            }
+        }
+    }
+
+    private void deleteUser() {
+        int selectedRow = userTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Select a user to delete");
+            return;
+        }
+
+        User user = tableModel.getUserAt(selectedRow);
+        int option = JOptionPane.showConfirmDialog(this, "Delete user " + user.getUsername() + "?", "Confirm", JOptionPane.YES_NO_OPTION);
+        if (option == JOptionPane.YES_OPTION) {
+            if (userDAO.deleteUser(user.getId())) {
+                loadUsers();
+                JOptionPane.showMessageDialog(this, "User deleted successfully");
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete user");
+            }
+        }
+    }
+
+    // Simple table model
+    private static class UserTableModel extends javax.swing.table.AbstractTableModel {
+        private List<User> users = java.util.Collections.emptyList();
+        private String[] columns = {"ID", "Username", "Name", "Email", "Matricule", "Level", "Role"};
+
+        public void setUsers(List<User> users) {
+            this.users = users;
+            fireTableDataChanged();
+        }
+
+        public User getUserAt(int row) {
+            return users.get(row);
+        }
+
+        @Override
+        public int getRowCount() {
+            return users.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columns.length;
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columns[column];
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            User user = users.get(rowIndex);
+            switch (columnIndex) {
+                case 0: return user.getId();
+                case 1: return user.getUsername();
+                case 2: return user.getName();
+                case 3: return user.getEmail();
+                case 4: return user.getMatricule();
+                case 5: return user.getLevel();
+                case 6: return user.getRole();
+                default: return "";
+            }
+        }
+    }
+}

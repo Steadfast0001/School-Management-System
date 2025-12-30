@@ -1,0 +1,120 @@
+package dao;
+
+import config.DBConnection;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import model.User;
+
+public class UserDAO {
+
+    public User findByUsername(String username) {
+        String sql = "SELECT * FROM users WHERE username=?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                User u = new User();
+                u.setId(rs.getInt("id"));
+                u.setUsername(rs.getString("username"));
+                u.setPassword(rs.getString("password"));
+                u.setRole(rs.getString("role"));
+                u.setName(rs.getString("name"));
+                u.setEmail(rs.getString("email"));
+                u.setMatricule(rs.getString("matricule"));
+                u.setLevel(rs.getString("level"));
+                return u;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean addUser(User u) {
+        String sql = "INSERT INTO users (username, password, role, name, email, matricule, level) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, u.getUsername());
+            ps.setString(2, u.getPassword());
+            ps.setString(3, u.getRole());
+            ps.setString(4, u.getName());
+            ps.setString(5, u.getEmail());
+            ps.setString(6, u.getMatricule());
+            ps.setString(7, u.getLevel());
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users";
+
+        try (Connection con = DBConnection.getConnection();
+             Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                User u = new User();
+                u.setId(rs.getInt("id"));
+                u.setUsername(rs.getString("username"));
+                u.setPassword(rs.getString("password"));
+                u.setRole(rs.getString("role"));
+                u.setName(rs.getString("name"));
+                u.setEmail(rs.getString("email"));
+                u.setMatricule(rs.getString("matricule"));
+                u.setLevel(rs.getString("level"));
+                users.add(u);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    public boolean updateUser(User u) {
+        String sql = "UPDATE users SET username=?, password=?, role=?, name=?, email=?, matricule=?, level=? WHERE id=?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, u.getUsername());
+            ps.setString(2, u.getPassword());
+            ps.setString(3, u.getRole());
+            ps.setString(4, u.getName());
+            ps.setString(5, u.getEmail());
+            ps.setString(6, u.getMatricule());
+            ps.setString(7, u.getLevel());
+            ps.setInt(8, u.getId());
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteUser(int id) {
+        String sql = "DELETE FROM users WHERE id=?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+}
