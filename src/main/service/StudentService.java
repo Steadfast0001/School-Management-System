@@ -13,16 +13,16 @@ public class StudentService {
      */
     public boolean addStudent(Student student) {
 
-        if (student == null) return false;
-
-        if (student.getName() == null || student.getName().isEmpty())
+        if (!isValidStudent(student)) {
             return false;
+        }
 
-        if (student.getMatricule() == null || student.getMatricule().isEmpty())
+        // Check if matricule already exists
+        if (studentDAO.existsByMatricule(student.getMatricule())) {
             return false;
+        }
 
-        studentDAO.addStudent(student);
-        return true;
+        return studentDAO.addStudent(student);
     }
 
     /**
@@ -37,21 +37,49 @@ public class StudentService {
      */
     public boolean updateStudent(Student student) {
 
-        if (student == null || student.getId() <= 0)
-            return false;
-
-        studentDAO.updateStudent(student);
-        return true;
+    if (student == null || student.getId() <= 0) {
+        return false;
     }
+
+    if (!isValidStudent(student)) {
+        return false;
+    }
+
+    // Ensure matricule is unique except for this student
+    if (studentDAO.existsByMatriculeAndNotId(
+            student.getMatricule(), student.getId())) {
+        return false;
+    }
+
+    return studentDAO.updateStudent(student);
+}
+
 
     /**
      * Delete student
      */
     public boolean deleteStudent(int studentId) {
 
-        if (studentId <= 0) return false;
+        if (studentId <= 0) {
+            return false;
+        }
 
-        studentDAO.deleteStudent(studentId);
+        return studentDAO.deleteStudent(studentId);
+    }
+
+    /**
+     * Validate student fields
+     */
+    private boolean isValidStudent(Student student) {
+
+        if (student == null) return false;
+
+        if (student.getName() == null || student.getName().trim().isEmpty())
+            return false;
+
+        if (student.getMatricule() == null || student.getMatricule().trim().isEmpty())
+            return false;
+
         return true;
     }
 }

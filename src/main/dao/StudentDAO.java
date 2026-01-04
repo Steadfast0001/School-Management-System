@@ -8,7 +8,8 @@ import model.Student;
 
 public class StudentDAO {
 
-    public void addStudent(Student student) {
+    public boolean addStudent(Student student) {
+
         String sql = "INSERT INTO students(name, matricule, class_name, dob) VALUES (?, ?, ?, ?)";
 
         try (Connection con = DBConnection.getConnection();
@@ -19,14 +20,16 @@ public class StudentDAO {
             ps.setString(3, student.getClassName());
             ps.setDate(4, Date.valueOf(student.getDateOfBirth()));
 
-            ps.executeUpdate();
+            return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     public List<Student> getAllStudents() {
+
         List<Student> list = new ArrayList<>();
         String sql = "SELECT * FROM students";
 
@@ -50,7 +53,8 @@ public class StudentDAO {
         return list;
     }
 
-    public void updateStudent(Student student) {
+    public boolean updateStudent(Student student) {
+
         String sql = "UPDATE students SET name=?, matricule=?, class_name=?, dob=? WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
@@ -62,24 +66,48 @@ public class StudentDAO {
             ps.setDate(4, Date.valueOf(student.getDateOfBirth()));
             ps.setInt(5, student.getId());
 
-            ps.executeUpdate();
+            return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
-    public void deleteStudent(int id) {
+    public boolean deleteStudent(int id) {
+
         String sql = "DELETE FROM students WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, id);
-            ps.executeUpdate();
+            return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;
     }
+
+    // ✅ BUSINESS LOGIC SUPPORT METHOD
+    public boolean existsByMatriculeAndNotId(String matricule, int id) {
+
+    String sql = "SELECT 1 FROM students WHERE matricule = ? AND id <> ?";
+
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, matricule);
+        ps.setInt(2, id);
+
+        ResultSet rs = ps.executeQuery();
+        return rs.next();
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return false;
+}
+
 }

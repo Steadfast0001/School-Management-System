@@ -8,9 +8,26 @@ import model.User;
 
 public class UserDAO {
 
-    public User findByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username=?";
+    public boolean existsByUsername(String username) {
 
+    String sql = "SELECT 1 FROM users WHERE username = ?";
+
+    try (Connection con = DBConnection.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, username);
+        ResultSet rs = ps.executeQuery();
+
+        return rs.next(); // true if user exists
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+
+    return false;
+}
+public User findByUsername(String username) {
+        String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -18,16 +35,16 @@ public class UserDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                User u = new User();
-                u.setId(rs.getInt("id"));
-                u.setUsername(rs.getString("username"));
-                u.setPassword(rs.getString("password"));
-                u.setRole(rs.getString("role"));
-                u.setName(rs.getString("name"));
-                u.setEmail(rs.getString("email"));
-                u.setMatricule(rs.getString("matricule"));
-                u.setLevel(rs.getString("level"));
-                return u;
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setUsername(rs.getString("username"));
+                user.setPassword(rs.getString("password"));
+                user.setName(rs.getString("name"));
+                user.setEmail(rs.getString("email"));
+                user.setMatricule(rs.getString("matricule"));
+                user.setLevel(rs.getString("level"));
+                user.setRole(rs.getString("role"));
+                return user;
             }
 
         } catch (SQLException e) {
@@ -35,7 +52,7 @@ public class UserDAO {
         }
         return null;
     }
-
+    
     public boolean addUser(User u) {
         String sql = "INSERT INTO users (username, password, role, name, email, matricule, level) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = DBConnection.getConnection();
