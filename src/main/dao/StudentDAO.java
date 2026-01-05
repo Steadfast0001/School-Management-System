@@ -28,29 +28,26 @@ public class StudentDAO {
         return false;
     }
 
-    public List<Student> getAllStudents() {
-
-        List<Student> list = new ArrayList<>();
-        String sql = "SELECT * FROM students";
-
+    public Student getStudentByEmail(String email) {
+        String sql = "SELECT * FROM students WHERE email = ?";
         try (Connection con = DBConnection.getConnection();
-             Statement st = con.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-
-            while (rs.next()) {
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
                 Student s = new Student();
                 s.setId(rs.getInt("id"));
                 s.setName(rs.getString("name"));
                 s.setMatricule(rs.getString("matricule"));
                 s.setClassName(rs.getString("class_name"));
                 s.setDateOfBirth(rs.getDate("dob").toLocalDate());
-                list.add(s);
+                s.setEmail(rs.getString("email"));
+                return s;
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return list;
+        return null;
     }
 
     public boolean updateStudent(Student student) {

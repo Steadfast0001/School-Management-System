@@ -68,21 +68,21 @@ public class DashboardFrame extends JFrame {
         JButton announcementBtn = createStyledButton("Announcements", "System announcements");
 
         // Add buttons based on role
-        menuPanel.add(studentBtn);
-        menuPanel.add(teacherBtn);
-        menuPanel.add(attendanceBtn);
-        menuPanel.add(resultBtn);
-        menuPanel.add(courseBtn);
-        menuPanel.add(enrollmentBtn);
-        menuPanel.add(departmentBtn);
-        menuPanel.add(timetableBtn);
-        menuPanel.add(libraryBtn);
-        menuPanel.add(feeBtn);
-        menuPanel.add(reportBtn);
-        menuPanel.add(announcementBtn);
-
-        // Admin only buttons
         if (authService.isAdmin(currentUser)) {
+            // Admin gets all buttons
+            menuPanel.add(studentBtn);
+            menuPanel.add(teacherBtn);
+            menuPanel.add(attendanceBtn);
+            menuPanel.add(resultBtn);
+            menuPanel.add(courseBtn);
+            menuPanel.add(enrollmentBtn);
+            menuPanel.add(departmentBtn);
+            menuPanel.add(timetableBtn);
+            menuPanel.add(libraryBtn);
+            menuPanel.add(feeBtn);
+            menuPanel.add(reportBtn);
+            menuPanel.add(announcementBtn);
+
             JButton userMgmtBtn = createStyledButton("User Management", "Manage system users");
             JButton adminDashboardBtn = createStyledButton("Admin Panel", "Administrative controls");
             menuPanel.add(userMgmtBtn);
@@ -90,6 +90,12 @@ public class DashboardFrame extends JFrame {
 
             userMgmtBtn.addActionListener(e -> new UserManagementFrame(currentUser));
             adminDashboardBtn.addActionListener(e -> new AdminDashboardFrame(currentUser));
+        } else if (currentUser.getRole() != null && currentUser.getRole().equalsIgnoreCase("Student")) {
+            // Students get only student panel
+            menuPanel.add(studentBtn);
+        } else if (currentUser.getRole() != null && currentUser.getRole().equalsIgnoreCase("Teacher")) {
+            // Teachers get only teacher panel
+            menuPanel.add(teacherBtn);
         }
 
         // Footer
@@ -135,16 +141,16 @@ public class DashboardFrame extends JFrame {
     }
 
     private void openStudentManagement() {
-        if (authService.isAdmin(currentUser) || "TEACHER".equals(currentUser.getRole())) {
-            new StudentFrame();
+        if (authService.isAdmin(currentUser) || (currentUser.getRole() != null && currentUser.getRole().equalsIgnoreCase("Student"))) {
+            new StudentFrame(currentUser);
         } else {
             JOptionPane.showMessageDialog(this, "Access denied", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void openTeacherManagement() {
-        if (authService.isAdmin(currentUser)) {
-            new TeacherFrame();
+        if (authService.isAdmin(currentUser) || (currentUser.getRole() != null && currentUser.getRole().equalsIgnoreCase("Teacher"))) {
+            new TeacherFrame(currentUser);
         } else {
             JOptionPane.showMessageDialog(this, "Access denied", "Error", JOptionPane.ERROR_MESSAGE);
         }

@@ -1,0 +1,7 @@
+ui\UserManagementFrame.java:264: error: class, interface, enum, or record expected
+}
+^
+ui\UserManagementFrame.java:1: error: compact source file should not have package declaration
+package ui;
+^
+2 errors

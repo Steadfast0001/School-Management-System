@@ -74,17 +74,30 @@ public class TimetableDAO {
         return false;
     }
 
-    public boolean deleteTimetable(int id) {
-        String sql = "DELETE FROM timetables WHERE id = ?";
+    public List<Timetable> getTimetablesByInstructor(String instructor) {
+        List<Timetable> timetables = new ArrayList<>();
+        String sql = "SELECT t.*, c.course_name FROM timetables t JOIN courses c ON t.course_id = c.id WHERE t.instructor = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
+            stmt.setString(1, instructor);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Timetable timetable = new Timetable();
+                timetable.setId(rs.getInt("id"));
+                timetable.setCourseId(rs.getInt("course_id"));
+                timetable.setCourseName(rs.getString("course_name"));
+                timetable.setDayOfWeek(rs.getString("day_of_week"));
+                timetable.setStartTime(rs.getString("start_time"));
+                timetable.setEndTime(rs.getString("end_time"));
+                timetable.setRoom(rs.getString("room"));
+                timetable.setInstructor(rs.getString("instructor"));
+                timetables.add(timetable);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;
+        return timetables;
     }
-}

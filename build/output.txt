@@ -1,0 +1,11 @@
+service\StudentService.java:21: error: cannot find symbol
+        if (studentDAO.existsByMatricule(student.getMatricule())) {
+                      ^
+  symbol:   method existsByMatricule(String)
+  location: variable studentDAO of type StudentDAO
+service\StudentService.java:32: error: cannot find symbol
+        return studentDAO.getAllStudents();
+                         ^
+  symbol:   method getAllStudents()
+  location: variable studentDAO of type StudentDAO
+2 errors

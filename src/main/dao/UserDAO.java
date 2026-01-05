@@ -26,6 +26,25 @@ public class UserDAO {
 
     return false;
 }
+
+    public boolean existsByEmail(String email) {
+
+        String sql = "SELECT 1 FROM users WHERE email = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next(); // true if email exists
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 public User findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection con = DBConnection.getConnection();
@@ -98,6 +117,42 @@ public User findByUsername(String username) {
             e.printStackTrace();
         }
         return users;
+    }
+
+    public int getUserCountByRole(String role) {
+        String sql = "SELECT COUNT(*) FROM users WHERE role = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, role);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public boolean addUser(User u) {
+        String sql = "INSERT INTO users (username, password, role, name, email, matricule, level) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, u.getUsername());
+            ps.setString(2, u.getPassword());
+            ps.setString(3, u.getRole());
+            ps.setString(4, u.getName());
+            ps.setString(5, u.getEmail());
+            ps.setString(6, u.getMatricule());
+            ps.setString(7, u.getLevel());
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean updateUser(User u) {

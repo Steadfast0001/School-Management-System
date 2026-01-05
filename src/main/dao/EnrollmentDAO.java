@@ -101,17 +101,31 @@ public class EnrollmentDAO {
         return false;
     }
 
-    public boolean deleteEnrollment(int id) {
-        String sql = "DELETE FROM enrollments WHERE id = ?";
+    public List<Enrollment> getEnrollmentsByCourse(int courseId) {
+        List<Enrollment> enrollments = new ArrayList<>();
+        String sql = "SELECT e.*, s.first_name || ' ' || s.last_name as student_name FROM enrollments e " +
+                     "JOIN students s ON e.student_id = s.id WHERE e.course_id = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
+            stmt.setInt(1, courseId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Enrollment enrollment = new Enrollment();
+                enrollment.setId(rs.getInt("id"));
+                enrollment.setStudentId(rs.getInt("student_id"));
+                enrollment.setStudentName(rs.getString("student_name"));
+                enrollment.setCourseId(rs.getInt("course_id"));
+                enrollment.setEnrollmentDate(rs.getDate("enrollment_date").toLocalDate());
+                enrollment.setStatus(rs.getString("status"));
+                enrollment.setGrade(rs.getDouble("grade"));
+                enrollments.add(enrollment);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;
+        return enrollments;
     }
 }
